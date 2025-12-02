@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Xiaoheihe Comment Exporter",
+  "version": "0.1.0",
+  "description": "Export all comments from a Xiaoheihe post into a CSV file.",
+  "permissions": ["tabs", "activeTab"],
+  "host_permissions": ["https://xiaoheihe.cn/*", "https://*.xiaoheihe.cn/*"],
+  "action": {
+    "default_title": "Export Xiaoheihe comments"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["analyzer.html"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://xiaoheihe.cn/*", "https://*.xiaoheihe.cn/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

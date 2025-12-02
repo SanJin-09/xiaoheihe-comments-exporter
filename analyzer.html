@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV数据分析</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --platinum-white: #ffffff;
+            --soft-grey: #f0f0f0;
+            --dark-grey: #333333;
+            --light-border: #e0e0e0;
+            --shadow-color: rgba(0, 0, 0, 0.05);
+            --header-font: 'Playfair Display', serif;
+            --body-font: 'Montserrat', sans-serif;
+        }
+
+        body {
+            font-family: var(--body-font);
+            margin: 0;
+            padding: 0;
+            background-color: var(--soft-grey);
+            color: var(--dark-grey);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: var(--platinum-white);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+
+        header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--light-border);
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-family: var(--header-font);
+            font-weight: 700;
+            font-size: 2.8em;
+            color: var(--dark-grey);
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-family: var(--header-font);
+            font-weight: 400;
+            font-size: 1.8em;
+            color: var(--dark-grey);
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        section {
+            padding: 20px;
+            border: 1px solid var(--light-border);
+            border-radius: 6px;
+            background-color: var(--platinum-white);
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        section.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            font-size: 1.1em;
+            color: var(--dark-grey);
+        }
+
+        .input-group input[type="file"] {
+            display: none;
+        }
+
+        .input-group .custom-file-upload {
+            border: 1px solid var(--light-border);
+            display: inline-block;
+            padding: 12px 25px;
+            cursor: pointer;
+            border-radius: 5px;
+            background-color: var(--soft-grey);
+            color: var(--dark-grey);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .input-group .custom-file-upload:hover {
+            background-color: var(--light-border);
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        .input-group button {
+            background-color: var(--dark-grey);
+            color: var(--platinum-white);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.0em;
+            font-weight: 500;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-left: 15px;
+        }
+
+        .input-group button:hover {
+            background-color: #555;
+            transform: translateY(-2px);
+        }
+
+        #file-name {
+            margin-left: 15px;
+            font-style: italic;
+            color: #666;
+        }
+
+        .chart-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .chart-container canvas {
+            max-width: 100%;
+            height: auto;
+            background-color: var(--platinum-white);
+            border-radius: 5px;
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        .wordcloud-container {
+            position: relative;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #ffffff;
+            overflow: hidden;
+            padding: 16px 24px 20px;
+        }
+
+        #word-cloud-canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+            aspect-ratio: 8 / 5.2;
+            min-height: 520px;
+        }
+
+        #word-cloud-tooltip {
+            position: absolute;
+            pointer-events: none;
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            border-radius: 6px;
+            font-size: 12px;
+            opacity: 0;
+            transform: translate(-50%, -120%);
+            transition: opacity 0.12s ease;
+        }
+
+        .wordcloud-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 12px;
+        }
+
+        .wordcloud-note {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .ghost-btn {
+            border: 1px solid var(--light-border);
+            background: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: #333;
+        }
+
+        .ghost-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            text-align: center;
+        }
+
+        .stat-card {
+            padding: 12px;
+            background-color: var(--soft-grey);
+            border-radius: 6px;
+            border: 1px solid var(--light-border);
+            font-weight: 600;
+        }
+
+        .stat-card span {
+            display: block;
+            font-weight: 400;
+            color: #666;
+            margin-top: 6px;
+        }
+
+        .list-block {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .list-item {
+            border: 1px solid var(--light-border);
+            border-radius: 6px;
+            padding: 10px 12px;
+            background: var(--platinum-white);
+            box-shadow: 0 1px 4px var(--shadow-color);
+        }
+
+        .list-item .meta {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 6px;
+        }
+
+        .list-item .content {
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .region-container {
+            position: relative;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px 24px 18px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        #region-canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+            aspect-ratio: 9 / 5.2;
+            min-height: 440px;
+        }
+
+        #region-tooltip {
+            position: absolute;
+            pointer-events: none;
+            padding: 6px 10px;
+            background: rgba(17, 17, 17, 0.9);
+            color: #fff;
+            border-radius: 6px;
+            font-size: 12px;
+            opacity: 0;
+            transform: translate(-50%, -120%);
+            transition: opacity 0.12s ease;
+        }
+
+        .region-legend {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            color: #222;
+            font-family: 'Inter', 'Work Sans', 'DM Sans', 'Montserrat', sans-serif;
+        }
+
+        .legend-bar {
+            height: 12px;
+            width: 100%;
+            background: linear-gradient(90deg, #f5f5f5, #111);
+            border-radius: 6px;
+        }
+
+        .legend-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #111;
+            font-weight: 400;
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 768px) {
+            .container {
+                grid-template-columns: 1fr 1fr;
+            }
+            header {
+                grid-column: 1 / -1;
+            }
+            section {
+                margin: 0 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>盒友们在说什么？</h1>
+            <p>词云分析与地域统计，仅供娱乐</p>
+        </header>
+
+        <section>
+            <h2>上传 CSV 文件</h2>
+            <div class="input-group">
+                <label for="csv-file" class="custom-file-upload">选择 CSV 文件</label>
+                <input type="file" id="csv-file" accept=".csv">
+                <span id="file-name">未选择文件</span>
+                <button onclick="processCSV()">开始分析</button>
+            </div>
+        </section>
+
+        <section>
+            <h2>评论概览</h2>
+            <div id="stats" class="stats-grid">
+                <div class="stat-card">请上传文件后查看数据</div>
+            </div>
+        </section>
+
+        <section>
+            <h2>高频评论者</h2>
+            <div id="top-users" class="list-block">
+                <div class="list-item">上传或自动加载 CSV 后显示</div>
+            </div>
+        </section>
+
+        <section>
+            <h2>点赞最高的评论</h2>
+            <div id="top-likes" class="list-block">
+                <div class="list-item">上传或自动加载 CSV 后显示</div>
+            </div>
+        </section>
+
+        <section class="full-width">
+            <div class="wordcloud-header">
+                <h2 style="margin-bottom:0;">词云分析</h2>
+                <div class="wordcloud-note">词频越高，字号越大且更靠中心</div>
+                <button class="ghost-btn" onclick="resetWordCloudHighlight()">重置高亮</button>
+            </div>
+            <div id="word-cloud-chart" class="wordcloud-container">
+                <canvas id="word-cloud-canvas" width="800" height="520"></canvas>
+                <div id="word-cloud-tooltip"></div>
+            </div>
+        </section>
+
+        <section class="full-width">
+            <h2>地域统计</h2>
+            <div class="region-container">
+                <canvas id="region-canvas" width="900" height="560"></canvas>
+                <div id="region-tooltip"></div>
+                <div id="region-legend" class="region-legend"></div>
+            </div>
+        </section>
+    </div>
+
+    <script src="analyzer.js"></script>
+</body>
+</html>
